@@ -1,0 +1,14 @@
+project_id = "zfjicwlopcwjjvojmgow"
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.seed-dummy-users]
+verify_jwt = false
+
+[functions.create-department-users]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = true
+
