@@ -61,10 +61,10 @@ export const RoomCard = ({ name, price, image, description, capacity, amenities,
         </div>
         
         <div className="flex flex-wrap gap-2">
-          {amenities.map((amenity, index) => (
-            <div key={index} className="flex items-center space-x-1 text-sm text-muted-foreground">
+          {amenities.replace(/{|}/g, '').split(',').map((amenity, index) => (
+            <div key={index+1} className="flex items-center space-x-1 text-sm text-muted-foreground">
               {amenityIcons[amenity.toLowerCase()] || <span>•</span>}
-              <span>{amenity}</span>
+              <span>{amenity.replace(/"/g, '')}</span>
             </div>
           ))}
         </div>

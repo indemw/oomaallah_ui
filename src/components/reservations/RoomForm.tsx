@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
+import RoomService from "@/service/RoomService";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Room {
@@ -30,7 +31,7 @@ interface RoomTypeOption { id: string; name: string; code: string }
 export default function RoomForm({ open, onOpenChange, initial, onSuccess }: Props) {
   const isEdit = Boolean(initial?.id);
   const { toast } = useToast();
-
+  const roomService=new RoomService();
   const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([]);
   const [form, setForm] = useState<Room>({
     id: initial?.id,
@@ -55,9 +56,13 @@ export default function RoomForm({ open, onOpenChange, initial, onSuccess }: Pro
   }, [initial]);
 
   useEffect(() => {
-    supabase.from("room_types").select("id,name,code").order("name").then(({ data, error }) => {
+      const loadRoomTypes = async () => {
+    const { data,error}=await roomService.getRoomTypes();
+    //supabase.from("room_types").select("id,name,code").order("name").then(({ data, error }) => {
       if (!error && data) setRoomTypes(data as any);
-    });
+    }
+loadRoomTypes();
+    //});
   }, []);
 
   const handleChange = (key: keyof Room, value: any) => setForm((f) => ({ ...f, [key]: value }));
@@ -71,13 +76,14 @@ export default function RoomForm({ open, onOpenChange, initial, onSuccess }: Pro
         status: form.status,
         notes: form.notes || null,
         active: !!form.active,
+        id:form.id||null,
       };
 
       let error;
       if (isEdit && form.id) {
-        ({ error } = await supabase.from("rooms").update(payload).eq("id", form.id));
+        ({ error } = await roomService.updateRoom(payload)); //supabase.from("rooms").update(payload).eq("id", form.id));
       } else {
-        ({ error } = await supabase.from("rooms").insert(payload));
+        ({ error } = await roomService.saveRoom(payload));//supabase.from("rooms").insert(payload));
       }
       if (error) throw error;
       toast({ title: isEdit ? "Room updated" : "Room created" });

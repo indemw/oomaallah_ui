@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardService from "@/service/DashboardService";
 import { useEffect, useState } from "react";
 import { 
   MapPin, 
@@ -35,15 +36,16 @@ interface Room {
 const Index = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
-
+const dashboardService =new DashboardService();
   useEffect(() => {
     const loadRooms = async () => {
       try {
-        const { data } = await supabase
-          .from('room_types')
+        const { data } = await dashboardService.Index();
+        //console.log(data)
+          /*.from('room_types')
           .select('*')
           .eq('active', true)
-          .order('base_rate');
+          .order('base_rate');*/
         
         setRooms((data as Room[]) || []);
       } catch (error) {

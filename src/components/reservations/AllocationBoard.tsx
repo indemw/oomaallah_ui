@@ -7,13 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import CheckInForm from "@/components/frontoffice/CheckInForm";
-
+import ReservationService from "@/service/ReservationService";
+import RoomService from "@/service/RoomService";
 export default function AllocationBoard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [checkInFormOpen, setCheckInFormOpen] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-
+  const reservationService= new ReservationService();
+  const roomService= new RoomService();
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["allocations", "unassigned"],
     queryFn: async () => {
@@ -21,13 +23,13 @@ export default function AllocationBoard() {
       const toISO = (d: Date) => d.toISOString().slice(0, 10);
       const next = new Date(today);
       next.setDate(today.getDate() + 30);
-      const { data, error } = await supabase
-        .from("reservations")
+      const { data, error } = await reservationService.getAllocatedReservations();
+        /*.from("reservations")
         .select("id, guest_name, check_in_date, check_out_date, room_type_id, room_id, room_types:room_type_id(id,name,code), rooms:room_id(id,room_number)")
         .is("room_id", null)
         .gte("check_in_date", toISO(today))
         .lte("check_in_date", toISO(next))
-        .order("check_in_date", { ascending: true });
+        .order("check_in_date", { ascending: true });*/
       if (error) throw error;
       return data as any[];
     },
@@ -36,7 +38,7 @@ export default function AllocationBoard() {
   const { data: rooms } = useQuery({
     queryKey: ["allocations", "rooms"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("rooms").select("id, room_number, active, room_type_id").eq("active", true).order("room_number");
+      const { data, error } = await roomService.getActiveRooms();//supabase.from("rooms").select("id, room_number, active, room_type_id").eq("active", true).order("room_number");
       if (error) throw error;
       return data as any[];
     },
@@ -52,7 +54,7 @@ export default function AllocationBoard() {
   }, [rooms]);
 
   const assign = async (reservationId: string, roomId: string) => {
-    const { error } = await supabase.from("reservations").update({ room_id: roomId }).eq("id", reservationId);
+    const { error } = await reservationService.updateReservation({room_id:roomId,id:reservationId});//supabase.from("reservations").update({ room_id: roomId }).eq("id", reservationId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {

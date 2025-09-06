@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
+import ReservationService from "@/service/ReservationService";
 import { addDays, eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 
 export default function ReservationsCalendar() {
+  const reservationService= new ReservationService();
   const [month, setMonth] = useState<Date>(startOfMonth(new Date()));
 
   const toISO = (d: Date) => d.toISOString().slice(0, 10);
@@ -12,11 +14,12 @@ export default function ReservationsCalendar() {
     queryFn: async () => {
       const start = startOfMonth(month);
       const end = endOfMonth(month);
-      const { data, error } = await supabase
-        .from("reservations")
+     
+      const { data, error } = await reservationService.getMonthlyReservation({date:month});
+        /*.from("reservations")
         .select("id, check_in_date, check_out_date, room_id")
         .lte("check_in_date", toISO(end))
-        .gte("check_out_date", toISO(start));
+        .gte("check_out_date", toISO(start));*/
       if (error) throw error;
       return data as { id: string; check_in_date: string; check_out_date: string; room_id: string | null }[];
     },
@@ -41,10 +44,10 @@ export default function ReservationsCalendar() {
   const { data: rooms } = useQuery({
     queryKey: ["rooms", "count"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("rooms").select("id", { count: "exact", head: true });
+      const { data, error } = await reservationService.getRoomsCount();//supabase.from("rooms").select("id", { count: "exact", head: true });
       if (error) throw error;
       // supabase-js doesn't return count when selecting head:true; workaround by second select count(*)
-      const { count } = await supabase.from("rooms").select("id", { count: "exact" });
+      const { count } = await reservationService.getRoomsCount();//from("rooms").select("id", { count: "exact" });
       return count || 0;
     }
   });

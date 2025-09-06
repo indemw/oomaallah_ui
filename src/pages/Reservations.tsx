@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoomTypesTable from "@/components/reservations/RoomTypesTable";
 import RoomsTable from "@/components/reservations/RoomsTable";
 import ReservationsTable from "@/components/reservations/ReservationsTable";
 import AllocationBoard from "@/components/reservations/AllocationBoard";
 import ReservationsCalendar from "@/components/reservations/ReservationsCalendar";
+import ReservationService from "@/service/ReservationService";
 
 const setSEO = (title: string, description: string, path: string) => {
   document.title = title;
@@ -22,20 +23,33 @@ const setSEO = (title: string, description: string, path: string) => {
 export default function Reservations() {
   const [enabled, setEnabled] = useState(true);
   const [checked, setChecked] = useState(false);
-
+  const reservationService=new ReservationService();
   useEffect(() => {
     setSEO("Reservations | Oomaallah Hotel", "Manage room reservations and calendar.", "/reservations");
-    supabase
+
+ loadSettings();
+    /*supabase
       .from('app_settings')
       .select('value')
       .eq('key', 'modules')
-      .maybeSingle()
-      .then(({ data }) => {
-        setEnabled(Boolean((data?.value as any)?.reservations ?? true));
-        setChecked(true);
-      });
+      .maybeSingle(){
+      .then(({ data }) => */
+        
+      //});
   }, []);
+ const  loadSettings = async () => {
+    try {
+      const  {data}   = await reservationService.getAppSetting()
+      setEnabled(Boolean((data?.value as any)?.reservations ?? true));
+        setChecked(true);
 
+    }
+    catch(error){
+       console.error('Error loading dashboard stats:', error);
+
+    }
+  
+  };
   return (
     <div className="space-y-6">
       <header>

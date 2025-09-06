@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
+import ReservationService from "@/service/ReservationService";
 import { useToast } from "@/hooks/use-toast";
 
 // Predefined amenity options for selection
@@ -48,7 +49,7 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
   const isEdit = Boolean(initial?.id);
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
-
+const reservationService =new ReservationService();
   const [form, setForm] = useState<RoomType>({
     id: initial?.id,
     name: initial?.name || "",
@@ -82,24 +83,27 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const mfile = event.target.files?.[0];
+    if (!mfile) return;
 
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
+      const fileExt = mfile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('gallery')
-        .upload(fileName, file);
+      console.log(form)
+          const formData = new FormData();
+      formData.append('file', mfile);
+      formData.append('file_name',fileName);
+         const { data: publicUrl ,error: uploadError } = await reservationService.uploadImage(formData)
+    /*.from('gallery')
+        .upload(fileName, file);*/
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      /*const { data: { publicUrl } } = supabase.storage
         .from('gallery')
-        .getPublicUrl(fileName);
-
+        .getPublicUrl(fileName);*/
+//console.log(publicUrl);
       handleChange('image_url', publicUrl);
       toast({ title: "Image uploaded successfully" });
     } catch (error: any) {
@@ -125,9 +129,9 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
 
       let error;
       if (isEdit && form.id) {
-        ({ error } = await supabase.from("room_types").update(payload).eq("id", form.id));
+        ({ error } = await reservationService.updateRoomType({payload:payload,id: form.id}));
       } else {
-        ({ error } = await supabase.from("room_types").insert(payload));
+        ({ error } = await  reservationService.createRoomType(payload)); 
       }
 
       if (error) throw error;
@@ -146,7 +150,8 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
           <DialogTitle>{isEdit ? "Edit Room Type" : "New Room Type"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-">
+
           <div>
             <Label htmlFor="name">Name</Label>
             <Input id="name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} />
@@ -161,7 +166,7 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
           </div>
           <div>
             <Label htmlFor="base_rate">Base Rate</Label>
-            <Input id="base_rate" type="number" min={0} value={form.base_rate} onChange={(e) => handleChange("base_rate", Number(e.target.value))} />
+            <Input id="base_rate" name="base_rate" type="number" min={0} value={form.base_rate} onChange={(e) => handleChange("base_rate", Number(e.target.value))} />
           </div>
           <div>
             <Label htmlFor="currency">Currency</Label>
@@ -198,6 +203,7 @@ export default function RoomTypeForm({ open, onOpenChange, initial, onSuccess }:
             <Label htmlFor="image">Room Image</Label>
             <Input 
               id="image" 
+              name="image"
               type="file" 
               accept="image/*" 
               onChange={handleImageUpload}

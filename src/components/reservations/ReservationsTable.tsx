@@ -5,20 +5,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useState } from "react";
 import ReservationForm, { Reservation } from "./ReservationForm";
 import { useToast } from "@/hooks/use-toast";
-
+import ReservationService from "@/service/ReservationService";
 export default function ReservationsTable() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Reservation | null>(null);
-
+const reservationService=new ReservationService();
   const { data, isLoading } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reservations")
+      const { data, error } = await reservationService.getReservations();
+       /* .from("reservations")
         .select("id,reservation_number,guest_name,check_in_date,check_out_date,adults,children,status,rate,currency,room_type_id,room_id, room_types:room_type_id(id,name,code), rooms:room_id(id,room_number)")
-        .order("check_in_date", { ascending: false });
+        .order("check_in_date", { ascending: false });*/
       if (error) throw error;
       return data as any[];
     },
@@ -30,7 +30,7 @@ export default function ReservationsTable() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this reservation?")) return;
-    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    const { error } = await  reservationService.deleteReservation(id)//supabase.from("reservations").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {

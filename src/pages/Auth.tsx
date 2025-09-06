@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AuthService from "@/service/AuthService";
 
 const setSEO = (title: string, description: string, path: string) => {
   document.title = title;
@@ -17,7 +18,7 @@ const setSEO = (title: string, description: string, path: string) => {
   link.setAttribute("href", `${window.location.origin}${path}`);
   document.head.appendChild(link);
 };
-
+const authService=new AuthService();
 export default function Auth() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -53,15 +54,23 @@ export default function Auth() {
     try {
       if (isSignUp) {
         const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: redirectUrl }
-        });
-        if (error) throw error;
+        const { data,error } = await await authService.register({ email, password });
+        if (error) {
+
+           setError(data.message ?? "Authentication failed")
+        } 
+         else{
+             localStorage.setItem("access_token", data.token);
+           navigate(redirectUrl)
+         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { data,error } = await authService.authenticate({ email, password });
+        if (error) {
+           setError(data.message ?? "Authentication failed");
+        }
+        else{
+          navigate('/dashboard')
+        }
       }
     } catch (err: any) {
       setError(err.message ?? "Authentication failed");

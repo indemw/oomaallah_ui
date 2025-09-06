@@ -4,6 +4,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { ModuleCard } from "@/components/ModuleCard";
 import { DashboardCharts } from "@/components/DashboardCharts";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardService from "@/service/DashboardService"
 import { 
   Users, 
   DollarSign, 
@@ -26,7 +27,7 @@ interface DashboardStats {
   totalGuests: number;
   pendingOrders: number;
 }
-
+const dashboardService=new DashboardService();
 const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
@@ -47,38 +48,38 @@ const Dashboard = () => {
       const today = new Date().toISOString().split('T')[0];
       
       // Get today's revenue from POS orders and bills
-      const { data: todayOrders } = await supabase
-        .from('pos_orders')
+      const { data: todayOrders } = await dashboardService.getTodaysOrders();
+       /* .from('pos_orders')
         .select('total_amount')
         .gte('created_at', `${today}T00:00:00.000Z`)
         .lt('created_at', `${new Date(Date.now() + 24*60*60*1000).toISOString().split('T')[0]}T00:00:00.000Z`);
-      
+      */
       const todayRevenue = todayOrders?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
 
       // Get room statistics
-      const { data: rooms } = await supabase
-        .from('rooms')
+      const { data: rooms } = await dashboardService.getRooms();
+        /*getRooms.from('rooms')
         .select('id, status')
-        .eq('active', true);
+        .eq('active', true);*/
       
       const totalRooms = rooms?.length || 0;
       const occupiedRooms = rooms?.filter(room => room.status === 'occupied').length || 0;
 
       // Get active guests (current reservations)
-      const { data: activeReservations } = await supabase
-        .from('reservations')
+      const { data: activeReservations } = await dashboardService.activeReservations();
+        /*.from('reservations')
         .select('adults, children')
         .eq('status', 'checked_in')
         .lte('check_in_date', today)
-        .gte('check_out_date', today);
+        .gte('check_out_date', today);*/
       
       const totalGuests = activeReservations?.reduce((sum, res) => sum + (res.adults || 0) + (res.children || 0), 0) || 0;
 
       // Get pending orders count
-      const { data: pendingOrdersData } = await supabase
-        .from('pos_orders')
+      const { data: pendingOrdersData } = await dashboardService.pendingOrders();
+        /*.from('pos_orders')
         .select('id')
-        .in('status', ['open', 'preparing']);
+        .in('status', ['open', 'preparing']);*/
       
       const pendingOrders = pendingOrdersData?.length || 0;
 
