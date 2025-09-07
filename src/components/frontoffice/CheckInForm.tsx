@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarDays, Users, Bed, CreditCard } from "lucide-react";
-
+import ReservationService from "@/service/ReservationService";
 interface CheckInFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,7 +34,7 @@ interface Reservation {
   notes?: string;
   room_type_id: string;
   room_id?: string;
-  room_types?: {
+  room_type?: {
     id: string;
     name: string;
     code: string;
@@ -58,13 +58,14 @@ export default function CheckInForm({ open, onOpenChange, reservationId }: Check
   const [processing, setProcessing] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [guestNotes, setGuestNotes] = useState("");
-
+  const reservationService=new ReservationService();
   // Get reservation details
   const { data: reservation, isLoading: loadingReservation } = useQuery({
     queryKey: ["reservation", reservationId],
     queryFn: async () => {
       if (!reservationId) return null;
-      const { data, error } = await supabase
+      const { data, error } = await reservationService.getReservation(reservationId)
+      /*supabase
         .from("reservations")
         .select(`
           *,
@@ -72,27 +73,27 @@ export default function CheckInForm({ open, onOpenChange, reservationId }: Check
           rooms:room_id(id, room_number)
         `)
         .eq("id", reservationId)
-        .single();
+        .single();*/
       
       if (error) throw error;
       return data as Reservation;
     },
     enabled: !!reservationId,
   });
-
+console.log(reservation)
   // Get available rooms for the reservation's room type
   const { data: availableRooms } = useQuery({
     queryKey: ["available-rooms", reservation?.room_type_id],
     queryFn: async () => {
       if (!reservation?.room_type_id) return [];
       
-      const { data, error } = await supabase
-        .from("rooms")
+      const { data, error } = await reservationService.getAvailableRoom(reservation.room_type_id);
+        /*.from("rooms")
         .select("id, room_number, status, room_type_id")
         .eq("room_type_id", reservation.room_type_id)
         .eq("active", true)
         .in("status", ["vacant", "clean"])
-        .order("room_number");
+        .order("room_number");*/
       
       if (error) throw error;
       return data as Room[];
@@ -120,14 +121,14 @@ export default function CheckInForm({ open, onOpenChange, reservationId }: Check
     setProcessing(true);
     try {
       // Update reservation status and room assignment
-      const { error: reservationError } = await supabase
-        .from("reservations")
+      const { error: reservationError } = await reservationService.updateReservationStatus({room_id:selectedRoomId,notes:guestNotes || reservation.notes,id:reservation.id})
+       /* .from("reservations")
         .update({
           status: "checked_in",
           room_id: selectedRoomId,
           notes: guestNotes || reservation.notes
         })
-        .eq("id", reservation.id);
+        .eq("id", reservation.id);*/
 
       if (reservationError) throw reservationError;
 
@@ -250,11 +251,11 @@ export default function CheckInForm({ open, onOpenChange, reservationId }: Check
                 </span>
               </div>
 
-              {reservation.room_types && (
+              {reservation.room_type && (
                 <div>
                   <Label className="text-sm font-medium">Room Type</Label>
                   <p className="text-sm text-muted-foreground">
-                    {reservation.room_types.name} ({reservation.room_types.code})
+                    {reservation.room_type.name} ({reservation.room_type.code})
                   </p>
                 </div>
               )}

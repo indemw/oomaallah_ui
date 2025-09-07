@@ -68,8 +68,8 @@ const reservationService=new ReservationService();
                   <TableCell className="font-medium">{r.reservation_number}</TableCell>
                   <TableCell>{r.guest_name}</TableCell>
                   <TableCell>{r.check_in_date} → {r.check_out_date}</TableCell>
-                  <TableCell>{r.room_types ? `${r.room_types.name} (${r.room_types.code})` : '-'}</TableCell>
-                  <TableCell>{r.rooms?.room_number || '-'}</TableCell>
+                  <TableCell>{r.room_type ? `${r.room_type.name} (${r.room_type.code})` : '-'}</TableCell>
+                  <TableCell>{r.room?.room_number || '-'}</TableCell>
                   <TableCell className="capitalize">{r.status}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setOpen(true); }}>Edit</Button>

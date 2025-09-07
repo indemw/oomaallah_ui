@@ -11,7 +11,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
+import ReservationService from "@/service/ReservationService";
 export interface Reservation {
   id?: string;
   reservation_number?: string;
@@ -42,7 +42,7 @@ interface ReservationFormProps {
 export default function ReservationForm({ open, onOpenChange, initial, onSuccess }: ReservationFormProps) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-
+const reservationService =new ReservationService();
   const [guestName, setGuestName] = useState(initial?.guest_name || "");
   const [checkIn, setCheckIn] = useState<Date | undefined>(initial?.check_in_date ? new Date(initial.check_in_date) : undefined);
   const [checkOut, setCheckOut] = useState<Date | undefined>(initial?.check_out_date ? new Date(initial.check_out_date) : undefined);
@@ -62,7 +62,7 @@ export default function ReservationForm({ open, onOpenChange, initial, onSuccess
 
   useEffect(() => {
     const load = async () => {
-      const { data: rt } = await supabase.from("room_types").select("id,name,code").eq("active", true).order("name");
+      const { data: rt } = await reservationService.getRoomTypes();//supabase.from("room_types").select("id,name,code").eq("active", true).order("name");
       setRoomTypes((rt || []).map((r: any) => ({ id: r.id, label: `${r.name} (${r.code})` })));
     };
     load();
@@ -71,12 +71,12 @@ export default function ReservationForm({ open, onOpenChange, initial, onSuccess
   useEffect(() => {
     const loadRooms = async () => {
       if (!roomTypeId) { setRooms([]); return; }
-      const { data: rms } = await supabase
-        .from("rooms")
+      const { data: rms } = await getActiveRoomsByRoomType(roomTypeId)
+        /*.from("rooms")
         .select("id, room_number, active")
         .eq("room_type_id", roomTypeId)
         .eq("active", true)
-        .order("room_number");
+        .order("room_number");*/
       setRooms((rms || []).map((r: any) => ({ id: r.id, label: r.room_number })));
     };
     loadRooms();
@@ -102,21 +102,24 @@ export default function ReservationForm({ open, onOpenChange, initial, onSuccess
       guest_name: guestName,
       check_in_date: format(checkIn, "yyyy-MM-dd"),
       check_out_date: format(checkOut, "yyyy-MM-dd"),
-      adults, children,
+      adults: adults, 
+      children: children,
       room_type_id: roomTypeId || null,
       room_id: roomId || null,
-      rate, currency: currency || "MWK",
-      status,
+      rate: rate, 
+      currency: currency || "MWK",
+      status: status,
       notes: notes || null,
       contact_email: email || null,
       contact_phone: phone || null,
+      id:initial.id||null,
     } as any;
 
     let error;
     if (initial?.id) {
-      ({ error } = await supabase.from("reservations").update(payload).eq("id", initial.id));
+      ({ error } = await reservationService.editReservation(payload));//supabase.from("reservations").update(payload).eq("id", initial.id));
     } else {
-      ({ error } = await supabase.from("reservations").insert(payload));
+      ({ error } = await reservationService.saveReservation(payload));//supabase.from("reservations").insert(payload));
     }
 
     setSaving(false);

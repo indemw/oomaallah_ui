@@ -25,6 +25,20 @@ export default class RoomService {
     }
    return response.data; 
   }
+
+  
+
+ async   getActiveRoomsByRoomType(roomTypeId){
+    let response;
+    try {
+      response = await api.get("getActiveRoomsByRoomType/"+roomTypeId);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+
      async   getRoomTypes(){
     let response;
     try {

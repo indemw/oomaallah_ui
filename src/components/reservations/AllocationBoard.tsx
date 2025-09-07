@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+//import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -96,7 +96,7 @@ export default function AllocationBoard() {
                   <TableRow key={r.id}>
                     <TableCell>{r.guest_name}</TableCell>
                     <TableCell>{r.check_in_date} → {r.check_out_date}</TableCell>
-                    <TableCell>{r.room_types ? `${r.room_types.name} (${r.room_types.code})` : '-'}</TableCell>
+                    <TableCell>{r.room_type ? `${r.room_type.name} (${r.room_type.code})` : '-'}</TableCell>
                     <TableCell>
                       <Select onValueChange={(v) => assign(r.id, v)}>
                         <SelectTrigger className="w-48">

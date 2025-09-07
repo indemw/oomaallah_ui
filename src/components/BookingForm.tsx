@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ReservationService from "@/service/ReservationService";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const BookingForm = () => {
@@ -24,24 +25,24 @@ export const BookingForm = () => {
   const [confRooms, setConfRooms] = useState<Tables<'conference_rooms'>[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const { toast } = useToast();
-
+  const reservationService=new ReservationService();
   // Load real options from the system
   useEffect(() => {
     const load = async () => {
       setLoadingOptions(true);
       try {
-        const { data: rtypes } = await supabase
-          .from('room_types')
+        const { data: rtypes } = await reservationService.getRoomTypes();
+          /*.from('room_types')
           .select('id, name, base_rate, capacity, currency, active')
           .eq('active', true)
-          .order('name');
+          .order('name');*/
         setRoomTypes((rtypes as any) || []);
 
-        const { data: crooms } = await supabase
-          .from('conference_rooms')
+        const { data: crooms } = await reservationService.getConferenceRooms()
+          /*.from('conference_rooms')
           .select('id, name, capacity, base_rate, currency, active')
           .eq('active', true)
-          .order('name');
+          .order('name');*/
         setConfRooms((crooms as any) || []);
       } finally {
         setLoadingOptions(false);

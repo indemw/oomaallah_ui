@@ -151,4 +151,73 @@ await axios.post('http://localhost/oomaallah_api/api/uploadImage', payload, {
     }
    return response.data; 
   }
+  
+
+
+async   editReservation(payload){
+    let response;
+    try {
+      response = await api.post("editReservation",payload);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+  async   saveReservation(payload){
+    let response;
+    try {
+      response = await api.post("saveReservation",payload);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+ async   updateReservationStatus(payload){
+    let response;
+    try {
+      response = await api.post("updateReservationStatus",payload);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+    async   getReservation(reservationId){
+    let response;
+    try {
+      response = await api.get("getReservation/"+reservationId);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+
+ 
+
+    async    getAvailableRoom(roomId){
+    let response;
+    try {
+      response = await api.get("getAvailableRoom/"+roomId);
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
+
+ 
+
+   async  getConferenceRooms() {
+    let response;
+    try {
+      response = await api.get("getConferenceRooms");
+      console.log(response.data)
+    } catch (err) {
+      return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message }) };
+    }
+   return response.data; 
+  }
 }
